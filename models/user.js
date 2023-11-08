@@ -16,10 +16,16 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: true,
+      unique: true,
     },
     password: {
       type: String,
       required: true,
+    },
+    role: {
+      type: [String],
+      enum: ["attendee", "organizer", "admin"],
+      default: ["attendee"],
     },
     verified: {
       type: Boolean,
@@ -38,14 +44,4 @@ userSchema.methods.generateAuthToken = function () {
 
 const User = mongoose.model("users", userSchema);
 
-const validate = (data) => {
-  const schema = Joi.object({
-    firstName: Joi.string().required().label("First Name"),
-    lastName: Joi.string().required().label("Last Name"),
-    email: Joi.string().email().required().label("Email"),
-    password: passwordComplexity().required().label("Password"),
-  });
-  return schema.validate(data);
-};
-
-module.exports = { User, validate };
+module.exports = { User };

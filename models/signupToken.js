@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const Schema = mongoose.Schema;
 
-const tokenSchema = new Schema({
+const signupTokenSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
     required: true,
@@ -20,6 +20,6 @@ const tokenSchema = new Schema({
   },
 });
 
-const Token = mongoose.model("tokens", tokenSchema);
+const SignupToken = mongoose.model("signuptokens", signupTokenSchema);
 
-module.exports = Token;
+module.exports = SignupToken;
