@@ -32,6 +32,7 @@ function deformatSingleDate(inputDateString) {
   }${day}`;
 
   const original = inputDateString;
+
   const originalCap = original.toUpperCase();
 
   return [original, originalCap, formattedDate, year, monthShortName, day];
