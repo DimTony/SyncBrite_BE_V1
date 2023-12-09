@@ -1,12 +1,21 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 const connection = require("./db");
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
+const eventRoutes = require("./routes/events");
 const passwordResetRoutes = require("./routes/passwordReset");
 const CustomError = require("./utils/customError");
 const globalErrorHandler = require("./controllers/errorController");
+
+process.on("uncaughtException", (err) => {
+  console.log(err.name, ":", err.message);
+  console.log("Uncaught Exception Occured! Shutting Down...");
+
+  process.exit(1);
+});
 
 const app = express();
 
@@ -16,11 +25,19 @@ connection();
 //middleware
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3000"],
+    method: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
 
 //routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/events", eventRoutes);
 app.use("/api/password-reset", passwordResetRoutes);
 
 app.all("*", (req, res, next) => {
@@ -35,4 +52,14 @@ app.all("*", (req, res, next) => {
 app.use(globalErrorHandler);
 
 const port = process.env.PORT || 8080;
-app.listen(port, () => console.log(`Listening on port ${port}`));
+const server = app.listen(port, () => console.log(`Listening on port ${port}`));
+
+process.on("unhandledRejection", (err) => {
+  console.log(err.name, ":", err.message);
+  console.log("Unhandled Rejection Occured! Shutting Down...");
+  server.close(() => {
+    process.exit(1);
+  });
+});
+
+module.exports = app;

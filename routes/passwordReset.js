@@ -1,13 +1,4 @@
 const router = require("express").Router();
-const crypto = require("crypto");
-const bcrypt = require("bcrypt");
-const sendEmail = require("../utils/sendEmail");
-const SignupToken = require("../models/signupToken");
-const { User } = require("../models/user");
-const {
-  passwordValidation,
-  emailValidation,
-} = require("../utils/validationSchema");
 const {
   sendResetPasswordLink,
   verifyResetPasswordLink,
