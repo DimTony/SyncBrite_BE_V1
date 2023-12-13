@@ -255,11 +255,53 @@ const resetPassword = asyncErrorHandler(async (req, res, next) => {
   });
 });
 
+const getUserByUsername = asyncErrorHandler(async (req, res, next) => {
+  const username = req.params.username;
+
+  const user = await Attendee.findOne({ userName: username });
+
+  if (!user) {
+    const err = new CustomError(404, "User Not Found");
+    return next(err);
+  }
+
+  const userProfile = {
+    id: user._id,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    fullName: user.fullName,
+    userName: user.userName,
+    email: user.email,
+    role: user.role,
+    profilePic: user.profilePic,
+    dateOfBirth: user.dateOfBirth,
+    location: user.location,
+    bio: user.bio,
+    coverPic: user.coverPic,
+    interests: user.interests,
+    pronouns: user.pronouns,
+    socialLinks: user.socialLinks,
+    verified: user.verified,
+    passwordChangedAt: user.passwordChangedAt,
+    friends: user.friends,
+    sentFriendRequests: user.sentFriendRequests,
+    receivedFriendRequests: user.receivedFriendRequests,
+    followers: user.followers,
+    following: user.following,
+  };
+
+  res.status(200).json({
+    success: true,
+    user: userProfile,
+  });
+});
+
 module.exports = {
   signupUser,
   verifyUser,
   sendResetPasswordLink,
   verifyResetPasswordLink,
   resetPassword,
+  getUserByUsername,
   tester,
 };

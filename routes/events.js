@@ -5,8 +5,11 @@ const isAuthenticated = require("../middlewares/authenticate");
 const {
   createEvent,
   getOwnEvents,
+  getUserEventsByUsername,
+  getAllTopEvents,
   getSingleEvent,
   likeEvent,
+  getMainTopEvents,
 } = require("../controllers/eventController");
 
 const storage = multer.memoryStorage();
@@ -24,6 +27,9 @@ router.post(
 );
 
 router.get("/", isAuthenticated, getOwnEvents);
+router.get("/users/:username", isAuthenticated, getUserEventsByUsername);
+router.get("/top", isAuthenticated, getAllTopEvents);
+router.get("/main", isAuthenticated, getMainTopEvents);
 router.get("/:eventId", isAuthenticated, getSingleEvent);
 router.patch("/like/:eventId", isAuthenticated, likeEvent);
 

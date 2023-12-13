@@ -66,7 +66,11 @@ const getSingleProfile = asyncErrorHandler(async (req, res, next) => {
     pronouns: attendee.pronouns,
     socialLinks: attendee.socialLinks,
     verified: attendee.verified,
+    passwordChangedAt: attendee.passwordChangedAt,
+    friends: attendee.friends,
+    pendingFriends: attendee.pendingFriends,
   };
+
   res.status(200).json({
     success: true,
     user: user,
@@ -178,7 +182,7 @@ const updateProfilePic = asyncErrorHandler(async (req, res, next) => {
   }
 });
 
-const updateCoverPic = async (req, res, next) => {
+const updateCoverPic = asyncErrorHandler(async (req, res, next) => {
   const userId = req.user.id.toString();
 
   if (req.file) {
@@ -213,7 +217,237 @@ const updateCoverPic = async (req, res, next) => {
     const err = new CustomError(401, "File is required");
     return next(err);
   }
-};
+});
+
+const friendUnfriend = asyncErrorHandler(async (req, res, next) => {
+  console.log(req.body);
+  console.log(req.params);
+
+  const friendValue = req.body.value;
+  const friendId = req.params.userId;
+  const userId = req.user.id;
+
+  if (!friendValue || !friendId) {
+    const error = new CustomError(400, "PROVIDE REQUIRED CREDENTIALS!!!");
+    return next(error);
+  }
+
+  if (friendValue === "friend") {
+    const attendee = await Attendee.findById(userId);
+
+    if (attendee) {
+      const updatedUser = await attendee.addFriend(friendId);
+
+      if (!updatedUser) {
+        const error = new CustomError(
+          400,
+          "FRIEND/UNFRIEND ACTION NOT COMPLETED!!!"
+        );
+        return next(error);
+      }
+
+      res.status(200).json({
+        success: true,
+        updatedUser,
+      });
+    } else {
+      const error = new CustomError(404, "USER NOT FOUND!!!");
+      return next(error);
+    }
+  } else if (friendValue === "unfriend") {
+    const attendee = await Attendee.findById(userId);
+
+    if (attendee) {
+      const updatedUser = await attendee.removeFriend(friendId);
+
+      if (!updatedUser) {
+        const error = new CustomError(
+          400,
+          "FRIEND/UNFRIEND ACTION NOT COMPLETED!!!"
+        );
+        return next(error);
+      }
+
+      return res.status(200).json({
+        success: true,
+        updatedUser,
+      });
+    } else {
+      const error = new CustomError(404, "USER NOT FOUND!!!");
+      return next(error);
+    }
+  } else if (friendValue === "cancel") {
+    const attendee = await Attendee.findById(userId);
+
+    if (attendee) {
+      const updatedUser = await attendee.cancelFriend(friendId);
+
+      if (!updatedUser) {
+        const error = new CustomError(
+          400,
+          "FRIEND/UNFRIEND ACTION NOT COMPLETED!!!"
+        );
+        return next(error);
+      }
+
+      return res.status(200).json({
+        success: true,
+        updatedUser,
+      });
+    } else {
+      const error = new CustomError(404, "USER NOT FOUND!!!");
+      return next(error);
+    }
+  } else {
+    const error = new CustomError(400, "INVALID ACTION VALUE");
+    return next(error);
+  }
+});
+
+const acceptDeclineFriendRequest = asyncErrorHandler(async (req, res, next) => {
+  console.log(req.body);
+  console.log(req.params);
+
+  const friendValue = req.body.value;
+  const friendId = req.params.userId;
+  const userId = req.user.id;
+
+  if (!friendValue || !friendId) {
+    const error = new CustomError(400, "PROVIDE REQUIRED CREDENTIALS!!!");
+    return next(error);
+  }
+
+  if (friendValue === "accept") {
+    const attendee = await Attendee.findById(userId);
+
+    if (attendee) {
+      const updatedUser = await attendee.acceptRequest(friendId);
+
+      if (!updatedUser) {
+        const error = new CustomError(
+          400,
+          "FRIEND/UNFRIEND ACTION NOT COMPLETED!!!"
+        );
+        return next(error);
+      }
+
+      res.status(200).json({
+        success: true,
+        updatedUser,
+      });
+    } else {
+      const error = new CustomError(404, "USER NOT FOUND!!!");
+      return next(error);
+    }
+  } else if (friendValue === "decline") {
+    const attendee = await Attendee.findById(userId);
+
+    if (attendee) {
+      const updatedUser = await attendee.declineRequest(friendId);
+
+      if (!updatedUser) {
+        const error = new CustomError(
+          400,
+          "FRIEND/UNFRIEND ACTION NOT COMPLETED!!!"
+        );
+        return next(error);
+      }
+
+      res.status(200).json({
+        success: true,
+        updatedUser,
+      });
+    } else {
+      const error = new CustomError(404, "USER NOT FOUND!!!");
+      return next(error);
+    }
+  } else {
+    const error = new CustomError(400, "INVALID ACTION VALUE");
+    return next(error);
+  }
+});
+
+const followUnfollow = asyncErrorHandler(async (req, res, next) => {
+  console.log(req.body);
+  console.log(req.params);
+
+  const followValue = req.body.value;
+  const friendId = req.params.userId;
+  const userId = req.user.id;
+
+  if (!followValue || !friendId) {
+    const error = new CustomError(400, "PROVIDE REQUIRED CREDENTIALS!!!");
+    return next(error);
+  }
+
+  if (followValue === "follow") {
+    const attendee = await Attendee.findById(userId);
+
+    if (attendee) {
+      const updatedUsers = await attendee.followFriend(friendId);
+
+      if (!updatedUsers) {
+        const error = new CustomError(
+          400,
+          "FOLLOW/UNFOLLOW ACTION NOT COMPLETED!!!"
+        );
+        return next(error);
+      }
+      res.status(200).json({
+        success: true,
+        updatedUsers,
+      });
+    } else {
+      const error = new CustomError(404, "USER NOT FOUND!!!");
+      return next(error);
+    }
+  } else if (followValue === "follow back") {
+    const attendee = await Attendee.findById(userId);
+
+    if (attendee) {
+      const updatedUsers = await attendee.followFriend(friendId);
+
+      if (!updatedUsers) {
+        const error = new CustomError(
+          400,
+          "FOLLOW/UNFOLLOW ACTION NOT COMPLETED!!!"
+        );
+        return next(error);
+      }
+      res.status(200).json({
+        success: true,
+        updatedUsers,
+      });
+    } else {
+      const error = new CustomError(404, "USER NOT FOUND!!!");
+      return next(error);
+    }
+  } else if (followValue === "unfollow") {
+    const attendee = await Attendee.findById(userId);
+
+    if (attendee) {
+      const updatedUsers = await attendee.unfollowFriend(friendId);
+
+      if (!updatedUsers) {
+        const error = new CustomError(
+          400,
+          "FOLLOW/UNFOLLOW ACTION NOT COMPLETED!!!"
+        );
+        return next(error);
+      }
+      res.status(200).json({
+        success: true,
+        updatedUsers,
+      });
+    } else {
+      const error = new CustomError(404, "USER NOT FOUND!!!");
+      return next(error);
+    }
+  } else {
+    const error = new CustomError(400, "INVALID ACTION VALUE");
+    return next(error);
+  }
+});
 
 module.exports = {
   getUserProfile,
@@ -223,4 +457,7 @@ module.exports = {
   updater,
   handler,
   updateProfilePic,
+  friendUnfriend,
+  acceptDeclineFriendRequest,
+  followUnfollow,
 };

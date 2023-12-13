@@ -47,6 +47,12 @@ const checkCookieUser = (req, res, next) => {
                 email: attendee.email,
                 role: attendee.role,
                 verified: attendee.verified,
+                passwordChangedAt: attendee.passwordChangedAt,
+                friends: attendee.friends,
+                sentFriendRequests: attendee.sentFriendRequests,
+                receivedFriendRequests: attendee.receivedFriendRequests,
+                followers: attendee.followers,
+                following: attendee.following,
               };
               return res.status(200).json({
                 message: "User Verified Successfully",
@@ -126,6 +132,12 @@ const checkAuthUser = (req, res, next) => {
                 email: attendee.email,
                 role: attendee.role,
                 verified: attendee.verified,
+                passwordChangedAt: attendee.passwordChangedAt,
+                friends: attendee.friends,
+                sentFriendRequests: attendee.sentFriendRequests,
+                receivedFriendRequests: attendee.receivedFriendRequests,
+                followers: attendee.followers,
+                following: attendee.following,
               };
               return res.status(200).json({
                 message: "User Verified Successfully",
@@ -203,7 +215,7 @@ const checkEventAuthUser = (req, res, next) => {
               events.eventEndDate = deformatSingleDate(events.eventEndDate);
               events.repeatDate = deformatSingleDate(events.repeatDate);
               events.customDates = deformatCustomDates(events.customDates);
-              console.log(events);
+
               return res.status(200).json({
                 message: "User Verified Successfully",
                 success: true,

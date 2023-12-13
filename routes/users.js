@@ -13,6 +13,7 @@ const {
 const {
   signupUser,
   verifyUser,
+  getUserByUsername,
   tester,
 } = require("../controllers/userController");
 const isAuthenticated = require("../middlewares/authenticate");
@@ -39,11 +40,9 @@ router.get("/", isAuthenticated, getUserProfile);
 
 router.get("/:userId", isAuthenticated, getSingleProfile);
 
-router.patch("/edit/profile", isAuthenticated, updateProfile); // working
+router.get("/profile/:username", isAuthenticated, getUserByUsername);
 
-router.patch("/tedit", upload.single("profilePic"), updater);
-
-router.patch("/aedit", handler);
+router.patch("/edit/profile", isAuthenticated, updateProfile);
 
 router.patch(
   "/edit/profile-pic",

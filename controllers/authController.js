@@ -47,12 +47,12 @@ const loginUser = asyncErrorHandler(async (req, res, next) => {
       },
     });
   } else {
-    const token = await SignupToken.findOne({
+    let token = await SignupToken.findOne({
       userId: user.id,
     });
 
     if (!token) {
-      const token = await new SignupToken({
+      token = await new SignupToken({
         userId: user.id,
         token: crypto.randomBytes(32).toString("hex"),
       }).save();

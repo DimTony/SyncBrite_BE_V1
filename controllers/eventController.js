@@ -74,7 +74,7 @@ const createEvent = asyncErrorHandler(async (req, res, next) => {
           }).save();
 
           if (!event) {
-            const err = new CustomError(404, "Error creating event!!!");
+            const err = new CustomError(400, "Error creating event!!!");
             return next(err);
           }
           // const updatedAttendee = await Attendee.findOneAndUpdate(
@@ -191,6 +191,74 @@ const createEvent = asyncErrorHandler(async (req, res, next) => {
   }
 });
 
+const getAllTopEvents = asyncErrorHandler(async (req, res, next) => {
+  const events = await Event.find({
+    $or: [
+      { visibility: { $ne: "Private" } },
+      { $and: [{ visibility: "Private" }, { userId: req.user.id }] },
+    ],
+  }).sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    events,
+    user: req.user,
+  });
+});
+
+const getMainTopEvents = asyncErrorHandler(async (req, res, next) => {
+  const userId = req.user.id;
+
+  // Fetch events where userId is equal to req.user._id
+  const userEvents = await Event.find({ userId: userId })
+    .sort({ createdAt: -1 })
+    .exec();
+
+  // Fetch events with visibility set to Public
+  const publicEvents = await Event.find({
+    visibility: "Public",
+  })
+    .sort({ createdAt: -1 })
+    .exec();
+
+  // Fetch events with visibility set to Friends or where userId is req.user._id
+  const friendsEvents = await Event.find({
+    visibility: "Friends",
+    userId: { $in: req.user.friends }, // Include events where userId is req.user._id
+  })
+    .sort({ createdAt: -1 })
+    .exec();
+
+  // Fetch events with visibility set to Group or where selectedGroups include req.user.groups
+  const groupsEvents = await Event.find({
+    visibility: "Group",
+    selectedGroups: { $in: req.user.groups },
+  })
+    .sort({ createdAt: -1 })
+    .exec();
+
+  // Combine all events
+  const allEvents = [
+    ...userEvents,
+    ...publicEvents,
+    ...friendsEvents,
+    ...groupsEvents,
+  ];
+
+  // Use a Set to ensure unique events based on their IDs
+  const uniqueEventIds = new Set(allEvents.map((event) => event._id));
+
+  // Fetch the unique events based on their IDs
+  const uniqueEvents = await Event.find({ _id: { $in: [...uniqueEventIds] } });
+
+  // Sort unique events by createdAt field from the latest to the oldest
+  const sortedEvents = uniqueEvents.sort((a, b) => b.createdAt - a.createdAt);
+
+  res.status(200).json({
+    success: true,
+    sortedEvents,
+  });
+});
 const getOwnEvents = asyncErrorHandler(async (req, res, next) => {
   const userId = req.user.id.toString();
 
@@ -201,6 +269,10 @@ const getOwnEvents = asyncErrorHandler(async (req, res, next) => {
     events,
     user: req.user,
   });
+});
+
+const getUserEventsByUsername = asyncErrorHandler(async (req, res, next) => {
+  console.log(req.params);
 });
 
 const getSingleEvent = asyncErrorHandler(async (req, res, next) => {
@@ -258,10 +330,6 @@ const getSingleEvent = asyncErrorHandler(async (req, res, next) => {
 });
 
 const likeEvent = asyncErrorHandler(async (req, res, next) => {
-  console.log("reee", req.body.value);
-  console.log("usss", req.user.id);
-  console.log("pppp", req.params);
-
   const likeValue = req.body.value;
   const userId = req.user.id.toString();
   const role = req.user.role;
@@ -322,4 +390,12 @@ const likeEvent = asyncErrorHandler(async (req, res, next) => {
   }
 });
 
-module.exports = { createEvent, getOwnEvents, getSingleEvent, likeEvent };
+module.exports = {
+  createEvent,
+  getAllTopEvents,
+  getOwnEvents,
+  getUserEventsByUsername,
+  getSingleEvent,
+  likeEvent,
+  getMainTopEvents,
+};

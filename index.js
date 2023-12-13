@@ -6,6 +6,7 @@ const connection = require("./db");
 const userRoutes = require("./routes/users");
 const authRoutes = require("./routes/auth");
 const eventRoutes = require("./routes/events");
+const profileRoutes = require("./routes/profiles");
 const passwordResetRoutes = require("./routes/passwordReset");
 const CustomError = require("./utils/customError");
 const globalErrorHandler = require("./controllers/errorController");
@@ -38,6 +39,7 @@ app.use(cookieParser());
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/profiles", profileRoutes);
 app.use("/api/password-reset", passwordResetRoutes);
 
 app.all("*", (req, res, next) => {

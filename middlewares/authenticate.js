@@ -85,6 +85,12 @@ const isAuthenticated = asyncErrorHandler(async (req, res, next) => {
     pronouns: attendee.pronouns,
     socialLinks: attendee.socialLinks,
     verified: attendee.verified,
+    passwordChangedAt: attendee.passwordChangedAt,
+    friends: attendee.friends,
+    sentFriendRequests: attendee.sentFriendRequests,
+    receivedFriendRequests: attendee.receivedFriendRequests,
+    followers: attendee.followers,
+    following: attendee.following,
   };
   next();
 });
