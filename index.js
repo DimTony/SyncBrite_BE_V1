@@ -28,10 +28,7 @@ connection();
 app.use(express.json());
 app.use(
   cors({
-    origin: [
-      "https://syncbrite-8spasbtj9-dimtony.vercel.app",
-      "http://localhost:3000",
-    ],
+    origin: ["https://syncbrite.vercel.app/", "http://localhost:3000"],
     methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
   })
