@@ -188,6 +188,7 @@ const logout = async (req, res, next) => {
 };
 
 const keepAlive = async (req, res) => {
+  console.log("Server is alive");
   res.status(200).json({ message: "Server is alive" });
 };
 
