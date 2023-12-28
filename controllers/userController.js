@@ -8,8 +8,11 @@ const {
   passwordValidation,
 } = require("../utils/validationSchema");
 const sendEmail = require("../utils/sendEmail");
-const userNameSlugify = require("../utils/userNameSlugify");
-const fullNameSlugify = require("../utils/fullNameSlugify");
+const {
+  fullNameSlugify,
+  userNameSlugify,
+  emailExists,
+} = require("../utils/fullNameSlugify");
 const CustomError = require("../utils/customError");
 const asyncErrorHandler = require("../utils/asyncErrorHandler");
 
@@ -35,22 +38,22 @@ const signupUser = asyncErrorHandler(async (req, res, next) => {
   const { firstName, lastName, email } = req.body;
   const emailLowerCase = email.toLowerCase();
 
-  let user = await Attendee.findOne({
-    email: emailLowerCase,
-  });
+  const existingUser = await Attendee.findOne({ email: email.toLowerCase() });
 
-  if (user) {
-    if (user.verified) {
+  if (existingUser) {
+    if (existingUser.verified) {
       return res.status(409).send({
         message: "User with the given email already exists",
       });
     }
 
-    const existingToken = await SignupToken.findOne({ userId: user._id });
+    const existingToken = await SignupToken.findOne({
+      userId: existingUser._id,
+    });
 
     if (existingToken) {
-      const url = `${process.env.BASE_URL}api/users/${user._id}/verify/${existingToken.token}`;
-      await sendEmail(user.email, "Verify Email", url);
+      const url = `${process.env.BASE_URL}api/users/${existingUser._id}/verify/${existingToken.token}`;
+      await sendEmail(existingUser.email, "Verify Email", url);
 
       return res.status(200).send({
         message: "Verification email sent again. Please check your inbox.",
@@ -58,14 +61,12 @@ const signupUser = asyncErrorHandler(async (req, res, next) => {
     }
   }
 
-  const salt = await bcrypt.genSalt(Number(process.env.SALT));
-
-  const passwordHash = await bcrypt.hash(req.body.password, salt);
-
   const userNameSlug = await userNameSlugify(firstName, lastName);
   const fullNameSlug = await fullNameSlugify(firstName, lastName);
+  const salt = await bcrypt.genSalt(Number(process.env.SALT));
+  const passwordHash = await bcrypt.hash(req.body.password, salt);
 
-  user = await new Attendee({
+  const user = await new Attendee({
     ...req.body,
     email: emailLowerCase,
     password: passwordHash,
@@ -296,6 +297,93 @@ const getUserByUsername = asyncErrorHandler(async (req, res, next) => {
   });
 });
 
+const signup = asyncErrorHandler(async (req, res, next) => {
+  const { firstName, lastName, email, password } = req.body;
+
+  // Convert email to lowercase
+  const lowercaseEmail = email.toLowerCase();
+
+  // Check if user with provided email already exists
+  const existingUser = await Attendee.findOne({ email: lowercaseEmail });
+
+  if (existingUser) {
+    // User already exists
+    if (existingUser.verified) {
+      return res
+        .status(409)
+        .json({ message: "A user with that email already exists" });
+    } else {
+      const existingToken = await SignupToken.findOne({
+        userId: existingUser._id,
+      });
+
+      if (existingToken) {
+        const url = `${process.env.BASE_URL}api/users/${existingUser._id}/verify/${existingToken.token}`;
+        await sendEmail(existingUser.email, "Verify Email", url);
+
+        return res.status(200).send({
+          message: "Verification email sent again. Please check your inbox.",
+        });
+      } else {
+        const newToken = await new SignupToken({
+          userId: existingUser._id,
+          token: crypto.randomBytes(32).toString("hex"),
+        }).save();
+
+        const url = `${process.env.BASE_URL}api/users/${existingUser._id}/verify/${newToken.token}`;
+
+        await sendEmail(existingUser.email, "Verify Email", url);
+        return res.status(200).send({
+          message: "Verification email sent again. Please check your inbox.",
+        });
+      }
+    }
+  } else {
+    // User does not exist, proceed with signup
+    const userNameSlug = await userNameSlugify(firstName, lastName);
+    const fullNameSlug = await fullNameSlugify(firstName, lastName);
+    const salt = await bcrypt.genSalt(Number(process.env.SALT));
+    const passwordHash = await bcrypt.hash(password, salt);
+
+    // Save user data after encrypting the password
+    const newUser = new Attendee({
+      firstName,
+      lastName,
+      email: lowercaseEmail,
+      password: passwordHash,
+      userName: userNameSlug,
+      fullName: fullNameSlug,
+      profilePic:
+        "https://res.cloudinary.com/dvvgaf1l9/image/upload/v1701036355/placeholder_bluals.png",
+      dateOfBirth: "",
+      location: "",
+      bio: "",
+      coverPic:
+        "https://res.cloudinary.com/dvvgaf1l9/image/upload/v1701287110/cover-placeholder_depeg6.jpg",
+      interests: [],
+      pronouns: "",
+      socialLinks: {},
+      verified: false,
+    });
+
+    await newUser.save();
+
+    const token = await new SignupToken({
+      userId: newUser._id,
+      token: crypto.randomBytes(32).toString("hex"),
+    }).save();
+
+    const url = `${process.env.BASE_URL}api/users/${newUser._id}/verify/${token.token}`;
+
+    await sendEmail(newUser.email, "Verify Email", url);
+
+    return res.status(201).json({
+      message:
+        "Account created. Verification email sent. Please check your inbox.",
+    });
+  }
+});
+
 module.exports = {
   signupUser,
   verifyUser,
@@ -304,4 +392,5 @@ module.exports = {
   resetPassword,
   getUserByUsername,
   tester,
+  signup,
 };

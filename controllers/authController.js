@@ -187,4 +187,8 @@ const logout = async (req, res, next) => {
     });
 };
 
-module.exports = { loginUser, verifyToken, login, register, logout };
+const keepAlive = async (req, res) => {
+  res.status(200).json({ message: "Server is alive" });
+};
+
+module.exports = { loginUser, verifyToken, login, register, logout, keepAlive };

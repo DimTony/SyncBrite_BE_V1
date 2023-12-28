@@ -5,6 +5,7 @@ const {
   login,
   register,
   logout,
+  keepAlive,
 } = require("../controllers/authController");
 const { updateProfile } = require("../controllers/profileController");
 const isAuthenticated = require("../middlewares/authenticate");
@@ -14,6 +15,7 @@ const {
   checkEventAuthUser,
 } = require("../middlewares/userAuth");
 
+router.get("/keep-alive", keepAlive);
 router.post("/", loginUser);
 router.post("/verify/:token", verifyToken);
 
